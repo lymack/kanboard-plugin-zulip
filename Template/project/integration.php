@@ -7,15 +7,15 @@
     <?= $this->form->text('zulip_webhook_botapi', $values, array(), array('placeholder="kanboard-bot@zulip.com:wxZyTkwvxzq"')) ?>
 
     <?= $this->form->label(t('Message Type'), 'zulip_message_type') ?>
-    <?= $this->form->select('zulip_message_type', array('' => '','stream' => 'stream', 'private' => 'private'), $values, array(), array('placeholder="private/stream"')) ?>
+    <?= $this->form->select('zulip_message_type', array('' => '','channel' => 'channel', 'direct' => 'direct'), $values, array(), array('placeholder="channel/direct"')) ?>
 
-    <?= $this->form->label(t('Channel (for Stream)'), 'zulip_webhook_channel') ?>
+    <?= $this->form->label(t('Channel (for Channel)'), 'zulip_webhook_channel') ?>
     <?= $this->form->text('zulip_webhook_channel', $values, array(), array('placeholder="channel"')) ?>
 
-    <?= $this->form->label(t('Subject (for Stream)'), 'zulip_webhook_subject') ?>
-    <?= $this->form->text('zulip_webhook_subject', $values, array(), array('placeholder="subject"')) ?>
+    <?= $this->form->label(t('Topic (for Channel)'), 'zulip_webhook_subject') ?>
+    <?= $this->form->text('zulip_webhook_subject', $values, array(), array('placeholder="topic"')) ?>
 
-    <?= $this->form->label(t('Email of user to be notified (for Private)'), 'zulip_webhook_email') ?>
+    <?= $this->form->label(t('Email of user to be notified (for Direct)'), 'zulip_webhook_email') ?>
     <?= $this->form->text('zulip_webhook_email', $values, array(), array('placeholder="user@zulip.com"')) ?>
 
     <?= $this->form->label(t('Event filters (Optional)'), 'zulip_webhook_eventfilter') ?>
