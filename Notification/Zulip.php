@@ -105,17 +105,17 @@ class Zulip extends Base implements NotificationInterface
 
         $message .= $title."\n";
 		
-		if($type == 'private'){
+		if($type == 'private' || $type == 'direct'){
 			$payload = array(
-				'type' => $type,
-				'to' => $email,
+				'type' => 'direct',
+				'to' => [$email],  // Convert to array format
 				'content' => $message,
 			);
 		} else {
 			$payload = array(
-				'type' => 'stream',
+				'type' => 'channel',  // Updated from 'stream' to 'channel'
 				'to' => $channel,
-				'topic' => $subject,
+				'topic' => $subject,  // Already updated from 'subject' to 'topic'
 				'content' => $message,
 			);
 		}
