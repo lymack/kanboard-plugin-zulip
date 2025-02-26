@@ -115,7 +115,7 @@ class Zulip extends Base implements NotificationInterface
 			$payload = array(
 				'type' => 'stream',
 				'to' => $channel,
-				'subject' => $subject,
+				'topic' => $subject,
 				'content' => $message,
 			);
 		}
