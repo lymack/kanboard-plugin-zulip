@@ -56,7 +56,8 @@ class Zulip extends Base implements NotificationInterface
     {
         $webhook = $this->projectMetadataModel->get($project['id'], 'zulip_webhook_url', $this->configModel->get('zulip_webhook_url'));
         $api_key = $this->projectMetadataModel->get($project['id'], 'zulip_webhook_botapi');
-        $type = $this->projectMetadataModel->get($project['id'], 'zulip_webhook_type');
+        // Changed from zulip_webhook_type to zulip_message_type for consistency
+        $type = $this->projectMetadataModel->get($project['id'], 'zulip_message_type');
         $channel = $this->projectMetadataModel->get($project['id'], 'zulip_webhook_channel');
         $subject = $this->projectMetadataModel->get($project['id'], 'zulip_webhook_subject');
         $email = $this->projectMetadataModel->get($project['id'], 'zulip_webhook_email');
@@ -83,6 +84,8 @@ class Zulip extends Base implements NotificationInterface
      * @param  array     $event_data
      * @param  string    $channel
      * @param  string    $subject
+     * @param  string    $type
+     * @param  string    $email
      * @return array
      */
     public function getMessage(array $project, $event_name, array $event_data, $channel, $subject, $type, $email)
@@ -104,23 +107,33 @@ class Zulip extends Base implements NotificationInterface
         }
 
         $message .= $title."\n";
-		
-		if($type == 'private' || $type == 'direct'){
-			$payload = array(
-				'type' => 'direct',
-				'to' => [$email],  // Convert to array format
-				'content' => $message,
-			);
-		} else {
-			$payload = array(
-				'type' => 'channel',  // Updated from 'stream' to 'channel'
-				'to' => $channel,
-				'topic' => $subject,  // Already updated from 'subject' to 'topic'
-				'content' => $message,
-			);
-		}
-		
-		return $payload;
+        
+        // Standardize type to use modern Zulip API conventions
+        $type = strtolower($type);
+        if ($type === 'private') {
+            $type = 'direct'; // Map deprecated 'private' to modern 'direct'
+        } elseif ($type === 'stream') {
+            $type = 'channel'; // Map deprecated 'stream' to modern 'channel'
+        }
+        
+        if ($type === 'direct') {
+            // Ensure email is in array format for direct messages
+            $payload = array(
+                'type' => 'direct',
+                'to' => !is_array($email) ? [$email] : $email,
+                'content' => $message,
+            );
+        } else {
+            // Default to channel type
+            $payload = array(
+                'type' => 'channel',
+                'to' => $channel,
+                'topic' => $subject, // Using 'topic' as per current Zulip API
+                'content' => $message,
+            );
+        }
+        
+        return $payload;
     }
 
     /**
@@ -132,15 +145,20 @@ class Zulip extends Base implements NotificationInterface
      * @param  array     $project
      * @param  string    $event_name
      * @param  array     $event_data
-     * @param  string    $channel
+     * @param  string    $api_key
      * @param  string    $subject
+     * @param  string    $type
+     * @param  string    $email
      */
     private function sendMessage($webhook, $channel, array $project, $event_name, array $event_data, $api_key, $subject, $type, $email)
     {
         $payload = $this->getMessage($project, $event_name, $event_data, $channel, $subject, $type, $email);
-        $headers = array(
-          'Authorization: Basic '. base64_encode($api_key)
-        );
+        
+        // Properly handle API key for Zulip authentication
+        $headers = array();
+        if (!empty($api_key)) {
+            $headers[] = 'Authorization: Basic ' . base64_encode($api_key);
+        }
 
         $this->httpClient->postFormAsync($webhook, $payload, $headers);
     }
